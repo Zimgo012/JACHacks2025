@@ -1,6 +1,6 @@
 //@desc add Animal
 //@route POST /animals/
-export const addAnimal = async(req, res) => {
+export const addAnimal = async(req, res, next) => {
     const db = req.db;
     const newPost = req.body;
 

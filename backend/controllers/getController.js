@@ -2,7 +2,7 @@
 
 //@desc Get All animals
 //@route GET /animals/
-export const getAnimals = async (req, res) => {
+export const getAnimals = async (req, res, next) => {
 
     try{
         const db = req.db;
