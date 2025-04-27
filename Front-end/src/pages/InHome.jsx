@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import {useNavigate} from 'react-router-dom';
 import {useAuth0} from '@auth0/auth0-react';
+import {analyzeVibe} from '../services/geminiService';
 
 
 const images = import.meta.glob('../assets/*.png', {eager: true});
@@ -15,7 +16,8 @@ function Home() {
   const vibeInputRef = useRef(null);
   const [vibeText, setVibeText] = useState('');
   const navigate = useNavigate();
-  const {loginWithRedirect, isAuthenticated}=useAuth0();
+  const {logout, user, isAuthenticated} = useAuth0();
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -30,31 +32,29 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = async (e) => {
     if(e.key === 'Enter'){
       e.preventDefault();
 
       if(vibeText.trim().length === 0) return;
 
-      if (!isAuthenticated){
-        alert('Please sign in first.');
-        loginWithRedirect();
-        return;
+      try{
+        const result = await analyzeVibe(vibeText.trim());
+        
+        await fetch(apiUrl + 'vibesearch', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify(result),
+        });
+
+        navigate('/select-pet', {state: {petDescription: vibeText.trim()}});
+
+      }catch(error){
+        console.log('error analyzing vibe:',error);
       }
-
-      fetch(apiUrl+'vibesearch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify({vibe: vibeText.trim()}),
-      }).catch(error => {
-        console.log('Fail to send data:',error);
-      });
-
-      navigate('/select-pet');
     }
-  }
+  };
 
-    
     return (
       <div className='min-h-screen m-0 p-10 bg-[#EDE9E0]'>
         <nav className='flex justify-between items-end'>
@@ -64,10 +64,30 @@ function Home() {
             <span className='text-6xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Peto</span>
             <span className='text-6xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>Vibe</span>
           </div>
-          <div className='flex cursor-pointer flex' onClick={loginWithRedirect}>
-            <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Sign</span>
-            <div className='w-1'></div>
-            <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>In</span>
+          <div className='flex items-center'>
+            <div className='cursor-pointer flex'>
+                {isAuthenticated && user && (
+                    <img 
+                    src={user.picture}
+                    alt='user'
+                    className='w-12 h-12 rounded-full object-cover cursor-pointer'
+                    onMouseEnter={() => setShowProfile(prev => true)}
+                    onMouseLeave={() => setShowProfile(prev => false)}
+                    />
+                )}
+                {isAuthenticated && user && showProfile && (
+                    <div className='absolute top-28 right-25 bg-white p-4 rounded-lg shadow-lg text-center z-10'>
+                        <p className='text-lg font-semibold'>{user.name}</p>
+                        <p className='text-lg font-semibold'>{user.email}</p>
+                    </div>
+                )}
+            </div>
+            <div className='w-10'></div>
+            <div className='cursor-pointer flex'  onClick={() => logout({returnTo: window.location.origin})}>
+              <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Sign</span>
+              <div className='w-1'></div>
+              <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>Out</span>
+            </div>
           </div>
         </nav>
         <main className='mt-10 flex justify-center'>
