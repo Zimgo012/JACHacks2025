@@ -1,4 +1,3 @@
-
 import { handleDatabase } from '../data/handleDatabase.js';
 
 const API_KEY = 'AIzaSyDdrmCTZ1dRW6dLlR0X-qImb-t9KKqpjfc'; // replace with env later
@@ -6,35 +5,45 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 
 export async function analyzeVibe(petDescription) {
   try {
-    // Step 1: Fetch pets from backend
     const pets = await handleDatabase();
 
     if (!pets.length) {
       throw new Error('No pets available to analyze.');
     }
 
-    // Step 2: Build prompt
     const prompt = `
-You are a pet matching expert system. Analyze the provided pet description to find ideal pet matches.
+You are a pet matching expert system. Your primary goal is to match pets based on the user's EXACT request first, then consider other characteristics.
 
 User's Desired Pet Description:
 "${petDescription}"
 
-Available Pet IDs:
-[${pets.map(p => `"${p.id}"`).join(', ')}]
+Available Pets:
+${pets.map(p => `{
+  "id": "${p.id}",
+  "name": "${p.name}",
+  "species": "${p.species}",
+  "breed": "${p.breed}",
+  "age": "${p.age}",
+  "size": "${p.size}",
+  "description": "${p.description}"
+}`).join(',\n')}
 
 Instructions:
-1. First, identify the primary pet type (cat, dog, bird, rabbit, etc.) mentioned in the description.
-2. Prioritize matching pets of the requested type.
-3. For each pet in the database:
-   - Calculate compatibility score (0-100)
-   - Consider: activity level, space needs, time commitment, experience required, allergies, household fit.
-4. Include ALL pets with a match percentage of 50% or higher.
-5. Create a brief lifestyle analysis of the user's preferences.
+1. PRIMARY MATCHING RULE: Match pets that EXACTLY match the user's request first.
+2. For each pet:
+   - First check if it matches the user's exact request
+   - If it doesn't, reduce score accordingly
+   - Then consider description, characteristics, traits
+3. Match Scoring:
+   - Perfect match: 90-100%
+   - Good match: 70-89%
+   - Partial match: 50-69%
+   - Poor match: <50%
+4. Include only pets with 50% or higher.
 
 Important:
-- Only include pets with IDs from the list above.
-- Output only raw JSON (no markdown, no commentary, no code blocks).
+- Output raw JSON only.
+- Only include pets from the provided list.
 
 Response Format:
 {
@@ -42,23 +51,20 @@ Response Format:
     {
       "id": "pet-id",
       "matchPercentage": number,
-      "matchReason": "specific reason for match score"
+      "matchReason": "reason"
     }
   ],
-  "analysis": "concise lifestyle analysis focusing on key pet compatibility factors"
+  "analysis": "lifestyle analysis"
 }
 `;
 
-    // Step 3: Call Gemini
     const response = await fetch(`${GEMINI_API_URL}?key=${API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: [
-          { parts: [{ text: prompt }] }
-        ],
+        contents: [{ parts: [{ text: prompt }] }],
       }),
     });
 
@@ -73,7 +79,6 @@ Response Format:
       throw new Error('No response from Gemini API');
     }
 
-    // Step 4: Parse Gemini JSON output
     const jsonMatch = generatedText.match(/```json\s*(\{.*?\})\s*```|(\{.*?\})/s);
     const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[2]) : null;
 
@@ -83,22 +88,23 @@ Response Format:
 
     const result = JSON.parse(jsonStr);
 
-    // Step 5: Map Gemini results to real pets
-    const seenIds = new Set();
+    const seen = new Set();
     const updatedPets = result.pets
-        .map(match => {
-          const pet = pets.find(p => p.id === match.id);
-          if (!pet || seenIds.has(pet.id)) return null;
-          seenIds.add(pet.id);
+      .map(match => {
+        const pet = pets.find(p => p.id === match.id || p.name === match.name);
+        if (!pet || seen.has(pet.id) || seen.has(pet.name)) return null;
+        seen.add(pet.id);
+        seen.add(pet.name);
 
-          return {
-            ...pet,
-            matchPercentage: match.matchPercentage,
-            matchReason: match.matchReason
-          };
-        })
-        .filter(Boolean)
-        .sort((a, b) => b.matchPercentage - a.matchPercentage);
+        return {
+          ...pet,
+          matchPercentage: match.matchPercentage,
+          matchReason: match.matchReason
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.matchPercentage - a.matchPercentage)
+      .slice(0, 8); // return top 8 only
 
     return {
       pets: updatedPets,
@@ -108,17 +114,27 @@ Response Format:
   } catch (error) {
     console.error('Error in analyzeVibe:', error);
 
-    // Fallback if Gemini fails
-    const fallbackPets = (await handleDatabase()).map(pet => ({
-      ...pet,
-      matchPercentage: Math.floor(Math.random() * 30) + 70,
-      matchReason: `${pet.name} could be a good match based on your description.`
-    }))
-        .filter(pet => pet.matchPercentage >= 50)
-        .sort((a, b) => b.matchPercentage - a.matchPercentage);
+    const fallbackPets = (await handleDatabase())
+      .map(pet => ({
+        ...pet,
+        matchPercentage: Math.floor(Math.random() * 30) + 70,
+        matchReason: `${pet.name} could be a good match based on your description.`
+      }))
+      .filter(pet => pet.matchPercentage >= 50);
+
+    const seenFallback = new Set();
+    const uniqueFallbackPets = fallbackPets
+      .filter(pet => {
+        if (seenFallback.has(pet.id) || seenFallback.has(pet.name)) return false;
+        seenFallback.add(pet.id);
+        seenFallback.add(pet.name);
+        return true;
+      })
+      .sort((a, b) => b.matchPercentage - a.matchPercentage)
+      .slice(0, 10);
 
     return {
-      pets: fallbackPets,
+      pets: uniqueFallbackPets,
       analysis: "Fallback analysis: Based on your description, we've matched pets considering basic compatibility factors."
     };
   }

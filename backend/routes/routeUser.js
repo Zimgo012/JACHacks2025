@@ -25,4 +25,7 @@ userRouter.post('/auth0_hook', postController.addUserFromHook)
 
 //@desc find user by id
 // userRouter.get('/',getController)
+
+//@desc contact
+userRouter.post('/contact', postController.addContact)
 export default userRouter;
