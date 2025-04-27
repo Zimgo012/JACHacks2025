@@ -5,6 +5,8 @@ import dotenv from 'dotenv';
 import {MongoClient} from "mongodb";
 import routeAnimal from "./routes/routeAnimal.js";
 import routeUser from "./routes/routeUser.js";
+import cors from 'cors';
+
 
 // === SETUPS === //
 
@@ -14,6 +16,7 @@ const __dirname = path.dirname(__filename);
 dotenv.config();
 const app  = express(); // APP
 const PORT = process.env.PORT || 3000; //PORT
+app.use(cors()); //CORS
 
 
 // === DATABASE CONFIG === //
@@ -40,6 +43,7 @@ connectToDatabase();
 // == END OF CONFIGURATION == //
 
 // === BODY PARSER MIDDLEWARE === //
+app.use
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
@@ -64,3 +68,5 @@ app.use('/users',routeUser)
 // === START LISTENING === //
 app.listen(PORT, () => {
     console.log(`Server is running on port: ${PORT}`)})
+
+export default app;
