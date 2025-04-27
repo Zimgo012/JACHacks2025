@@ -11,7 +11,9 @@ const LoadingSpinner = () => (
 const SelectPet = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const { analyzeResult } = location.state || {};
+
   const apiUrl = import.meta.env.VITE_HOST;
   
   const [matchedPets, setMatchedPets] = useState([]);
@@ -27,7 +29,6 @@ const SelectPet = () => {
       if (!response.ok) {
         throw new Error('Failed to fetch matched pets');
       }
-
       const data = await response.json();
       setMatchedPets(data.pets || []);
       setVibeAnalysis(data.analysis || '');
@@ -38,15 +39,9 @@ const SelectPet = () => {
       setIsLoading(false);
     }
   }
-
-  useEffect(() => {
-    if (!analyzeResult || analyzeResult.length === 0) {
-      navigate('/home');
-      return;
-    }
-
     fetchMatchedPets();
   },[analyzeResult, navigate]);
+
 
   useEffect(() => {
     const handleKeyPress = (event) => {
