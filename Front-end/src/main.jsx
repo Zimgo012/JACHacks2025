@@ -12,6 +12,7 @@ createRoot(document.getElementById('root')).render(
       domain="dev-1030jwn6paz7xypp.us.auth0.com"
       clientId="tX0VaFPlWDdJSXjkc2Gd38km2WynHNBl"
       authorizationParams={{
+          audience: "https://petoVibe/api",
         redirect_uri: window.location.origin + '/home',
       }}
     >

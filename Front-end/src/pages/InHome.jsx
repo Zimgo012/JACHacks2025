@@ -16,7 +16,7 @@ function Home() {
   const vibeInputRef = useRef(null);
   const [vibeText, setVibeText] = useState('');
   const navigate = useNavigate();
-  const {logout, user, isAuthenticated} = useAuth0();
+  const {logout, user, isAuthenticated,getAccessTokenSilently} = useAuth0();
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
@@ -32,6 +32,42 @@ function Home() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    async function saveUserToBackend() {
+      try {
+        const token = await getAccessTokenSilently();
+
+        console.log('Saving user to backend...');
+        console.log('User:', user);
+        console.log('apiUrl:', apiUrl);
+
+        const response = await fetch('http://localhost:5176/users', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: user.email,
+            name: user.name,
+          }),
+        });
+
+        if (!response.ok) {
+          console.warn('Failed to save user:', await response.text());
+        } else {
+          console.log('✅ User saved successfully.');
+        }
+      } catch (error) {
+        console.error('Error saving user to backend:', error.message);
+      }
+    }
+
+    if (isAuthenticated && user) {
+      saveUserToBackend();
+    }
+  }, [isAuthenticated, user, apiUrl, getAccessTokenSilently]);
+
   const handleKeyDown = async (e) => {
     if(e.key === 'Enter'){
       e.preventDefault();
@@ -40,7 +76,7 @@ function Home() {
 
       try{
         const result = await analyzeVibe(vibeText.trim());
-        
+
         await fetch(apiUrl + 'vibesearch', {
             method: 'POST',
             headers: {'Content-Type':'application/json'},
