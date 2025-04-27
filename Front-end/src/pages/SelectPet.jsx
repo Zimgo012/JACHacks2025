@@ -1,7 +1,27 @@
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { analyzeVibe } from '../services/geminiService';
-import { RefreshCw, ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { RefreshCw, ArrowLeft, X } from 'lucide-react';
+
+const styles = `
+  @keyframes fadeScale {
+    0% {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .animate-fadeScale {
+    animation: fadeScale 1s ease-out;
+  }
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
 
 const SelectPet = () => {
   const location = useLocation();
@@ -13,7 +33,6 @@ const SelectPet = () => {
   
   const [matchedPets, setMatchedPets] = useState([]);
   const [error, setError] = useState('');
-  const [vibeAnalysis, setVibeAnalysis] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedPet, setExpandedPet] = useState(null);
@@ -31,7 +50,7 @@ const SelectPet = () => {
       .sort((a, b) => b.matchPercentage - a.matchPercentage);
   
     setMatchedPets(uniquePets);
-    setVibeAnalysis(analyzeResult.analysis || '');
+    
   }, [analyzeResult, navigate]);
   
 
@@ -94,7 +113,7 @@ const SelectPet = () => {
           onClick={() => isCurrent && handleCardClick(pet)}
         >
           <h2 className="text-3xl font-bold text-[#30180D] mb-4">{pet.name}</h2>
-          <div className="w-full h-48 mb-3 rounded-xl overflow-hidden shadow-md transform transition-all duration-300 hover:scale-105">
+          <div className="w-full h-52 mb-3 rounded-xl overflow-hidden shadow-md transform transition-all duration-300 hover:scale-105">
             <img
               src={pet.imageUrl}
               alt={pet.name}
@@ -135,8 +154,9 @@ const SelectPet = () => {
           </button>
           
           <div className="flex flex-col md:flex-row gap-8">
-            <div className="w-full md:w-1/2">
-              <img
+            <div className="w-full md:w-1/2 flex flex-col h-full">
+            <div className='flex flex-col'>
+            <img
                 src={expandedPet.imageUrl}
                 alt={expandedPet.name}
                 className="w-full h-64 object-cover rounded-xl shadow-md"
@@ -144,6 +164,15 @@ const SelectPet = () => {
               <div className="flex gap-2 mt-4">
                 <span className="px-3 py-1 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white rounded-full text-sm shadow-sm">{expandedPet.age}</span>
                 <span className="px-3 py-1 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white rounded-full text-sm shadow-sm">{expandedPet.size}</span>
+              </div>
+            </div>
+              <div className='flex justify-center mt-5'>
+              <button
+              onClick={() => navigate('/contact',{state: {pet: expandedPet}})}
+              className="cursor-pointer mt-auto px-6 py-3 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white font-semibold rounded-lg hover:from-[#A66B58] hover:to-[#B67B68] transition-colors shadow-md"
+              >
+                Adopt
+              </button>
               </div>
             </div>
             
@@ -191,37 +220,37 @@ const SelectPet = () => {
   }
 
   return (
-    <div className='min-h-screen m-0 p-10 bg-[#EDE9E0]'>
-        <h1 className='text-8xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D] cursor-pointer text-center'>Your Pet Matches</h1>
-        <div className="relative flex justify-center items-center h-[800px] overflow-hidden">
-          {matchedPets.map((pet, index) => renderPetCard(pet, index))}
-        </div>
+    <div className='min-h-screen m-0 p-10 bg-[#EDE9E0] animate-fadeScale'>
+  <h1 className='text-8xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D] cursor-pointer text-center'>Your Pet Matches</h1>
+  
+  <div className="relative flex justify-center items-center h-[800px] overflow-hidden">
+    {matchedPets.length > 0 ? (
+      matchedPets.map((pet, index) => renderPetCard(pet, index))
+    ) : (
+      <div className="text-center py-12">
+        <p className="text-4xl text-[#30180D] mb-1">
+          We couldn't find any matching pets based on your description.
+        </p>
+        <p className="text-4xl text-[#30180D] mb-1">
+          Please try again with different preferences.
+        </p>
+      </div>
+    )}
+  </div>
 
-        {matchedPets.length === 0 && !isLoading && !error && (
-          <div className="text-center py-12">
-            <p className="text-lg text-[#30180D] mb-1">
-              We couldn't find any matching pets based on your description. Please try again with different preferences.
-            </p>
-            <button
-              onClick={() => window.history.back()}
-              className="inline-block px-6 py-3 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white font-medium rounded-lg hover:from-[#A66B58] hover:to-[#B67B68] transition-colors shadow-md"
-            >
-              Go Back
-            </button>
-          </div>
-        )}
+  <div className="flex justify-center">
+    <button
+      onClick={() => window.history.back()}
+      className="flex items-center px-6 py-3 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white font-medium rounded-lg hover:from-[#A66B58] hover:to-[#B67B68] transition-colors shadow-md mr-4"
+    >
+      <ArrowLeft className="h-5 w-5 mr-2" />
+      Go Back
+    </button>
+  </div>
 
-        <div className="flex justify-center">
-          <button
-            onClick={() => window.history.back()}
-            className="flex items-center px-6 py-3 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white font-medium rounded-lg hover:from-[#A66B58] hover:to-[#B67B68] transition-colors shadow-md mr-4"
-          >
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Go Back
-          </button>
-        </div>
-      {renderExpandedView()}
-    </div>
+  {renderExpandedView()}
+</div>
+
   );
 };
 export default SelectPet; 

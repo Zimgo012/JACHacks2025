@@ -3,6 +3,7 @@ import Home from './pages/Home';
 import InHome from './pages/InHome';
 import SelectPet from './pages/SelectPet';
 import Loading from './pages/Loading';
+import Contact from './pages/Contact';
 
 function App() {  
 
@@ -13,6 +14,7 @@ function App() {
       <Route path='/home' element={<InHome />}></Route>
       <Route path='/select-pet' element={<SelectPet />}></Route>
       <Route path='/loading' element={<Loading />}></Route>
+      <Route path='/contact' element={<Contact />}></Route>
     </Routes>
     </>
   );

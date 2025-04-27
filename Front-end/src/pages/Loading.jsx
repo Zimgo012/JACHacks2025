@@ -10,20 +10,34 @@ const styles = `
       transform: rotate(0deg);
     }
   }
-  
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
   .animate-spin-reverse {
     animation: spin-reverse 3s linear infinite;
   }
+
+  .animate-fadeIn {
+    animation: fadeIn 1s ease-out;
+  }
 `;
 
-// Add the styles to the document
 const styleSheet = document.createElement("style");
 styleSheet.innerText = styles;
 document.head.appendChild(styleSheet);
 
 const Loading = () => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] py-16">
+    <div className="flex flex-col items-center justify-center min-h-screen py-16 bg-[#EDE9E0] animate-fadeIn">
       <div className="flex flex-col items-center justify-center">
         <div className="relative w-64 h-64">
           {/* Outer rotating circle */}
@@ -60,7 +74,7 @@ const Loading = () => {
         </div>
 
         {/* Loading text */}
-        <p className="mt-8 text-3xl font-semibold text-[#30180D]">
+        <p className="mt-8 text-3xl font-semibold text-[#30180D] font-['Cal_Sans'] tracking-wide">
           Finding your perfect pet match
         </p>
       </div>
@@ -68,4 +82,4 @@ const Loading = () => {
   );
 };
 
-export default Loading; 
+export default Loading;

@@ -1,11 +1,30 @@
 import { useState, useEffect, useRef } from 'react'
-import {useNavigate} from 'react-router-dom';
-import {useAuth0} from '@auth0/auth0-react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 
+// ✨ fadeIn 애니메이션 추가
+const styles = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
-const images = import.meta.glob('../assets/*.png', {eager: true});
+  .animate-fadeIn {
+    animation: fadeIn 0.8s ease-out;
+  }
+`;
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
+
+const images = import.meta.glob('../assets/*.png', { eager: true });
 const imageList = Object.values(images).map((mod) => mod.default);
-
 
 function Home() {  
   const apiUrl = import.meta.env.VITE_HOST;
@@ -15,12 +34,11 @@ function Home() {
   const vibeInputRef = useRef(null);
   const [vibeText, setVibeText] = useState('');
   const navigate = useNavigate();
-  const {loginWithRedirect, isAuthenticated}=useAuth0();
+  const { loginWithRedirect, isAuthenticated } = useAuth0();
 
   useEffect(() => {
     const interval = setInterval(() => {
       setFade(false);
-
       setTimeout(() => {
         setIndex((prev) => (prev + 1) % imageList.length);
         setFade(true);
@@ -31,82 +49,73 @@ function Home() {
   }, []);
 
   const handleKeyDown = (e) => {
-    if(e.key === 'Enter'){
+    if (e.key === 'Enter') {
       e.preventDefault();
 
-      if(vibeText.trim().length === 0) return;
+      if (vibeText.trim().length === 0) return;
 
-      if (!isAuthenticated){
+      if (!isAuthenticated) {
         alert('Please sign in first.');
         loginWithRedirect();
         return;
       }
-
-      fetch(apiUrl+'vibesearch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json'},
-        body: JSON.stringify({vibe: vibeText.trim()}),
-      }).catch(error => {
-        console.log('Fail to send data:',error);
-      });
-
-      navigate('/select-pet');
     }
   }
 
-    
-    return (
-      <div className='min-h-screen m-0 p-10 bg-[#EDE9E0]'>
-        <nav className='flex justify-between items-end'>
-          <div className='flex items-end z-1'>
-            <img src='/icon.svg' alt='PETO VIBE icon' className='w-15 h-15 flex' />
-            <div className='w-5'></div>
-            <span className='text-6xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Peto</span>
-            <span className='text-6xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>Vibe</span>
-          </div>
-          <div className='flex cursor-pointer flex' onClick={loginWithRedirect}>
-            <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Sign</span>
-            <div className='w-1'></div>
-            <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>In</span>
-          </div>
-        </nav>
-        <main className='mt-10 flex justify-center'>
-          <img 
+  return (
+    <div className='min-h-screen m-0 p-10 bg-[#EDE9E0] animate-fadeIn'>
+      {/* 네비게이션 */}
+      <nav className='flex justify-between items-end'>
+        <div className='flex items-end z-1'>
+          <img src='/icon.svg' alt='PETO VIBE icon' className='w-15 h-15 flex' />
+          <div className='w-5'></div>
+          <span className='text-6xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Peto</span>
+          <span className='text-6xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>Vibe</span>
+        </div>
+        <div className='flex cursor-pointer flex' onClick={loginWithRedirect}>
+          <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D]'>Sign</span>
+          <div className='w-1'></div>
+          <span className='text-2xl font-bold font-["Cal_Sans"] tracking-wider text-[#B67B68]'>In</span>
+        </div>
+      </nav>
+
+      {/* 메인 */}
+      <main className='mt-10 flex justify-center'>
+        <img 
           src={imageList[index]} 
           alt='changing pet' 
           className={`h-[1000px] mt-[-150px] object-cover rounded-lg transition-opacity duration-500 ${fade ? "opacity-100" : "opacity-0"}`}
-          />
-          <div className='w-200'>
-            <div>
+        />
+        <div className='w-200'>
+          <div>
             <div className='h-20'></div>
-              <p className='text-8xl font-["Cal_Sans"] tracking-wider text-[#B67B68]'>Your vibe finds</p>
-              <p className='text-8xl font-["Cal_Sans"] tracking-wider text-[#B67B68]'>a soul.</p>
-              <div className='h-10'></div>
-              <p 
-              className='text-9xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D] cursor-pointer'
-              onClick={() => vibeInputRef.current.focus()}
-              >Rescue </p>
-              <p className='text-8xl font-["Cal_Sans"] tracking-wider text-[#B67B68]'>your match.</p>
-            </div>
-            <div>
-              <textarea
+            <p className='text-8xl font-["Cal_Sans"] tracking-wider text-[#B67B68]'>Your vibe finds</p>
+            <p className='text-8xl font-["Cal_Sans"] tracking-wider text-[#B67B68]'>a soul.</p>
+            <div className='h-10'></div>
+            <p
+            className='text-9xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D] w-40 cursor-pointer transition-transform duration-300 hover:scale-105'
+            onClick={() => vibeInputRef.current.focus()}
+            >
+              Rescue
+            </p>
+            <p className='text-8xl font-["Cal_Sans"] tracking-wider text-[#B67B68]'>your match.</p>
+          </div>
+          <div>
+            <textarea
               ref={vibeInputRef}
               value={vibeText}
-              onChange={(e) => {
-                setVibeText(e.target.value)
-              }}
+              onChange={(e) => setVibeText(e.target.value)}
               onKeyDown={handleKeyDown}
               rows='3'
-              placeholder='Describe your vibe...' 
+              placeholder='Describe your vibe...'
               className="mt-6 p-4 w-full rounded-lg border-4 border-[#B67B68] text-2xl font-['Cal_Sans'] transition-all duration-300
               focus:outline-none focus:ring-4 focus:ring-[#A65A48] focus:border-[#A65A48] focus:scale-105 resize-none overflow-hidden"
-              ></textarea>
-            </div>
+            ></textarea>
           </div>
-        </main>
-      </div>
-    );
-  }
-  
-  export default Home
-  
+        </div>
+      </main>
+    </div>
+  );
+}
+
+export default Home;
