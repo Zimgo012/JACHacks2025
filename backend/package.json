@@ -17,7 +17,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "nodemon --env-file=.env server.js",
+    "start": "nodemon server.js",
     "test": "jest"
   },
   "keywords": [],
