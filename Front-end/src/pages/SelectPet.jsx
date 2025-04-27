@@ -87,9 +87,10 @@ const SelectPet = () => {
             ? 'z-10 scale-90 opacity-50 translate-x-full blur-sm'
             : 'hidden'
         }`}
+        onClick={handleCardClickInternal}
       >
         <div 
-          className="bg-gradient-to-b from-[#EDE9E0] to-[#E5E0D5] rounded-2xl shadow-lg p-5 w-[280px] h-[420px] flex flex-col items-center cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
+          className="bg-gradient-to-b from-[#EDE9E0] to-[#E5E0D5] rounded-2xl shadow-lg p-5 w-[400px] h-[600px] flex flex-col items-center cursor-pointer transform transition-all duration-300 hover:scale-105 hover:shadow-xl"
           onClick={() => isCurrent && handleCardClick(pet)}
         >
           <h2 className="text-3xl font-bold text-[#30180D] mb-4">{pet.name}</h2>
@@ -192,14 +193,13 @@ const SelectPet = () => {
   return (
     <div className='min-h-screen m-0 p-10 bg-[#EDE9E0]'>
         <h1 className='text-8xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D] cursor-pointer text-center'>Your Pet Matches</h1>
-        <div className='h-20'></div>
-        <div className="relative flex justify-center items-center h-[450px] overflow-hidden">
+        <div className="relative flex justify-center items-center h-[800px] overflow-hidden">
           {matchedPets.map((pet, index) => renderPetCard(pet, index))}
         </div>
 
         {matchedPets.length === 0 && !isLoading && !error && (
           <div className="text-center py-12">
-            <p className="text-lg text-[#30180D] mb-6">
+            <p className="text-lg text-[#30180D] mb-1">
               We couldn't find any matching pets based on your description. Please try again with different preferences.
             </p>
             <button
@@ -211,7 +211,7 @@ const SelectPet = () => {
           </div>
         )}
 
-        <div className="flex justify-center mt-10">
+        <div className="flex justify-center">
           <button
             onClick={() => window.history.back()}
             className="flex items-center px-6 py-3 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white font-medium rounded-lg hover:from-[#A66B58] hover:to-[#B67B68] transition-colors shadow-md mr-4"
