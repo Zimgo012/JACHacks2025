@@ -49,16 +49,7 @@ function InHome() {
         
         console.log('Gemini analyzing result:', result);
 
-        const idsOnly = result.pets.map(pet => pet.id);
-        console.log('To send ids:', idsOnly);
-
-        await fetch(`${apiUrl}/vibesearch`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids: idsOnly }),
-        });
-
-        navigate('/select-pet', {state: {ids: idsOnly}});
+        navigate('/select-pet', {state: {analyzeResult: result}});
         setIsLoading(false);        
         
       }catch(error){

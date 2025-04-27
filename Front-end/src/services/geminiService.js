@@ -1,10 +1,12 @@
-import { mockPets } from '../data/mockPets.js';
+import {handleDatabase} from '../data/handleDatabase';
 
 const API_KEY = 'AIzaSyDdrmCTZ1dRW6dLlR0X-qImb-t9KKqpjfc';
 const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
 export async function analyzeVibe(petDescription) {
   try {
+    const pets = await handleDatabase();
+
     const prompt = `
       You are a pet matching expert system. Analyze the provided pet description to find ideal pet matches.
       
@@ -12,7 +14,7 @@ export async function analyzeVibe(petDescription) {
       "${petDescription}"
 
       Available Pet IDs:
-      [${mockPets.map(p => `"${p.id}"`).join(', ')}]
+      [${pets.map(p => "${p.id}").join(', ')}]
 
       Instructions:
       1. First, identify the primary pet type (cat, dog, bird, rabbit, etc.) mentioned in the description

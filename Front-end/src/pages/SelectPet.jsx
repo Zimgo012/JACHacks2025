@@ -11,7 +11,7 @@ const LoadingSpinner = () => (
 const SelectPet = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { ids } = location.state || {};
+  const { analyzeResult } = location.state || {};
   const apiUrl = import.meta.env.VITE_HOST;
   
   const [matchedPets, setMatchedPets] = useState([]);
@@ -24,12 +24,6 @@ const SelectPet = () => {
   async function fetchMatchedPets() {
     setIsLoading(true);
     try {
-      const response = await fetch(`${apiUrl}/vibesearch-result`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ids }),
-      });
-
       if (!response.ok) {
         throw new Error('Failed to fetch matched pets');
       }
@@ -46,13 +40,13 @@ const SelectPet = () => {
   }
 
   useEffect(() => {
-    if (!ids || ids.length === 0) {
+    if (!analyzeResult || analyzeResult.length === 0) {
       navigate('/home');
       return;
     }
 
     fetchMatchedPets();
-  },[ids, navigate]);
+  },[analyzeResult, navigate]);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -207,7 +201,7 @@ const SelectPet = () => {
             <ArrowLeft className="h-5 w-5 mr-2" />
             Go Back
           </button>
-          {petDescription && (
+          {analyzeResult && (
             <button
               onClick={handleRetry}
               className="flex items-center px-6 py-3 bg-gradient-to-r from-[#B67B68] to-[#C68B78] text-white font-medium rounded-lg hover:from-[#A66B58] hover:to-[#B67B68] transition-colors shadow-md"
