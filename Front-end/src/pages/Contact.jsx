@@ -30,20 +30,23 @@ function Contact() {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [message, setMessage] = useState('');
-  const [success, setSuccess] = useState(false);
   const location = useLocation();
   const { pet } = location.state || {};
-  const { user } = useAuth0();
+  const { user, getAccessTokenSilently } = useAuth0();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // await fetch('/api/contact', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ name, email, phone, message }),
-      // });
+        const token = await getAccessTokenSilently();
+      await fetch('http://localhost:5176/users/contact', {
+        method: 'POST',
+        headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ name, email, phone, message }),
+      });
 
       navigate('/home');
     } catch (error) {
