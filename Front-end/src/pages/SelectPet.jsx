@@ -17,7 +17,7 @@ const SelectPet = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedPet, setExpandedPet] = useState(null);
-
+  
   useEffect(() => {
     if (!analyzeResult) {
       navigate('/home');
@@ -33,7 +33,7 @@ const SelectPet = () => {
     setMatchedPets(uniquePets);
     setVibeAnalysis(analyzeResult.analysis || '');
   }, [analyzeResult, navigate]);
-  
+
 
   const handleNext = () => {
     if (currentIndex < matchedPets.length - 1) {

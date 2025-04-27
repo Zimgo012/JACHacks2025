@@ -86,6 +86,7 @@ function InHome() {
         console.log('Gemini analyzing result:', result);
 
         navigate('/select-pet', {state: {analyzeResult: result}});
+
         setIsLoading(false);        
         
       }catch(error){
