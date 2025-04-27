@@ -11,7 +11,8 @@ const LoadingSpinner = () => (
 const SelectPet = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { analyzeResult } = location.state || {};
+  const { ids } = location.state || {};
+  const apiUrl = import.meta.env.VITE_HOST;
   
   const [matchedPets, setMatchedPets] = useState([]);
   const [error, setError] = useState('');
@@ -20,51 +21,38 @@ const SelectPet = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedPet, setExpandedPet] = useState(null);
 
+  async function fetchMatchedPets() {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${apiUrl}/vibesearch-result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch matched pets');
+      }
+
+      const data = await response.json();
+      setMatchedPets(data.pets || []);
+      setVibeAnalysis(data.analysis || '');
+    } catch (err) {
+      console.error('Error fetching matched pets:', err);
+      setError('An error occurred while fetching your matched pets.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   useEffect(() => {
-    // If no data is provided, redirect back to home
-    if (!analyzeResult) {
+    if (!ids || ids.length === 0) {
       navigate('/home');
       return;
     }
 
-    setIsLoading(true);
-
-    async function fetchResults() {
-      try {
-        
-        if (!analyzeResult) {
-          setError('No pet description provided. Please describe your ideal pet.');
-          setIsLoading(false);
-          return;
-        }
-
-        const result = await analyzeVibe(analyzeResult);
-        
-        if (result.error) {
-          setError(result.error);
-          setIsLoading(false);
-          return;
-        }
-        
-        // Remove duplicates and sort pets by match percentage
-        const uniquePets = (result.pets || [])
-          .filter((pet, index, self) => 
-            index === self.findIndex((p) => p.id === pet.id)
-          )
-          .sort((a, b) => b.matchPercentage - a.matchPercentage);
-        
-        setMatchedPets(uniquePets);
-        setVibeAnalysis(result.analysis || '');
-        setIsLoading(false);
-      } catch (err) {
-        console.error('Error fetching results:', err);
-        setError('An error occurred while analyzing your vibe. Please try again.');
-        setIsLoading(false);
-      }
-    }
-
-    fetchResults();
-  }, [analyzeResult, navigate]);
+    fetchMatchedPets();
+  },[ids, navigate]);
 
   useEffect(() => {
     const handleKeyPress = (event) => {
@@ -91,29 +79,10 @@ const SelectPet = () => {
     }
   };
 
-  const handleRetry = async () => {
+  const handleRetry = () => {
     setError('');
-    setIsLoading(true);
-    try {
-      const result = await analyzeVibe(analyzeResult);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        const uniquePets = (result.pets || [])
-          .filter((pet, index, self) => 
-            index === self.findIndex((p) => p.id === pet.id)
-          )
-          .sort((a, b) => b.matchPercentage - a.matchPercentage);
-        setMatchedPets(uniquePets);
-        setVibeAnalysis(result.analysis || '');
-      }
-    } catch (err) {
-      console.error('Error retrying analysis:', err);
-      setError('An error occurred while analyzing your vibe. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    fetchMatchedPets();
+  };  
 
   const handleCardClick = (pet) => {
     setExpandedPet(pet);
