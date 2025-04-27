@@ -3,11 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { analyzeVibe } from '../services/geminiService';
 import { RefreshCw, ArrowLeft, ChevronLeft, ChevronRight, X } from 'lucide-react';
 
-// Loading spinner component
-const LoadingSpinner = () => (
-  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-600"></div>
-);
-
 const SelectPet = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -23,38 +18,22 @@ const SelectPet = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [expandedPet, setExpandedPet] = useState(null);
 
-  async function fetchMatchedPets() {
-    setIsLoading(true);
-    try {
-      if (!response.ok) {
-        throw new Error('Failed to fetch matched pets');
-      }
-      const data = await response.json();
-      setMatchedPets(data.pets || []);
-      setVibeAnalysis(data.analysis || '');
-    } catch (err) {
-      console.error('Error fetching matched pets:', err);
-      setError('An error occurred while fetching your matched pets.');
-    } finally {
-      setIsLoading(false);
-    }
-  }
-    fetchMatchedPets();
-  },[analyzeResult, navigate]);
-
-
   useEffect(() => {
-    const handleKeyPress = (event) => {
-      if (event.key === 'ArrowRight') {
-        handleNext();
-      } else if (event.key === 'ArrowLeft') {
-        handlePrevious();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [currentIndex, matchedPets.length]);
+    if (!analyzeResult) {
+      navigate('/home');
+      return;
+    }
+  
+    const uniquePets = (analyzeResult.pets || [])
+      .filter((pet, index, self) => 
+        index === self.findIndex((p) => p.id === pet.id)
+      )
+      .sort((a, b) => b.matchPercentage - a.matchPercentage);
+  
+    setMatchedPets(uniquePets);
+    setVibeAnalysis(analyzeResult.analysis || '');
+  }, [analyzeResult, navigate]);
+  
 
   const handleNext = () => {
     if (currentIndex < matchedPets.length - 1) {
@@ -85,6 +64,16 @@ const SelectPet = () => {
     const isCurrent = index === currentIndex;
     const isPrevious = index === currentIndex - 1;
     const isNext = index === currentIndex + 1;
+
+    const handleCardClickInternal = () => {
+      if(isCurrent){
+        setExpandedPet(pet);
+      } else if(isPrevious){
+        handlePrevious();
+      } else if(isNext){
+        handleNext();
+      }
+    };
 
     return (
       <div
@@ -173,16 +162,6 @@ const SelectPet = () => {
     );
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <LoadingSpinner />
-        <p className="mt-4 text-lg text-gray-700">Finding your perfect pet match...</p>
-        <p className="text-gray-500">Our AI is analyzing your vibe, please wait.</p>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-lg p-8 text-center">
@@ -211,40 +190,11 @@ const SelectPet = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <div className="bg-gradient-to-b from-[#EDE9E0] to-[#E5E0D5] rounded-2xl shadow-lg p-8 mb-8 animate-fadeIn">
-        <h1 className="text-3xl font-bold text-[#30180D] mb-6 text-center">Your Pet Matches</h1>
-        
-        {vibeAnalysis && (
-          <div className="mb-8 p-6 bg-gradient-to-r from-[#B67B68] to-[#C68B78] rounded-xl shadow-md">
-            <h2 className="text-xl font-semibold text-white mb-3">Your Vibe Analysis</h2>
-            <p className="text-white/90 leading-relaxed">{vibeAnalysis}</p>
-          </div>
-        )}
-
+    <div className='min-h-screen m-0 p-10 bg-[#EDE9E0]'>
+        <h1 className='text-8xl font-bold font-["Cal_Sans"] tracking-wider text-[#30180D] cursor-pointer text-center'>Your Pet Matches</h1>
+        <div className='h-20'></div>
         <div className="relative flex justify-center items-center h-[450px] overflow-hidden">
           {matchedPets.map((pet, index) => renderPetCard(pet, index))}
-          
-          <div className="absolute inset-0 flex items-center justify-between pointer-events-none">
-            <button
-              onClick={handlePrevious}
-              disabled={currentIndex === 0}
-              className={`p-2 rounded-full bg-gradient-to-r from-[#B67B68] to-[#C68B78] shadow-lg pointer-events-auto transition-all duration-300 ${
-                currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:from-[#A66B58] hover:to-[#B67B68]'
-              }`}
-            >
-              <ChevronLeft className="h-8 w-8 text-white" />
-            </button>
-            <button
-              onClick={handleNext}
-              disabled={currentIndex === matchedPets.length - 1}
-              className={`p-2 rounded-full bg-gradient-to-r from-[#B67B68] to-[#C68B78] shadow-lg pointer-events-auto transition-all duration-300 ${
-                currentIndex === matchedPets.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:from-[#A66B58] hover:to-[#B67B68]'
-              }`}
-            >
-              <ChevronRight className="h-8 w-8 text-white" />
-            </button>
-          </div>
         </div>
 
         {matchedPets.length === 0 && !isLoading && !error && (
@@ -270,10 +220,8 @@ const SelectPet = () => {
             Go Back
           </button>
         </div>
-      </div>
       {renderExpandedView()}
     </div>
   );
 };
-
 export default SelectPet; 
